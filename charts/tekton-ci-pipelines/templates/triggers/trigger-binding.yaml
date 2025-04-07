@@ -1,0 +1,22 @@
+# templates/trigger-binding.yaml
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: github-binding
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+spec:
+  params:
+    - name: action
+      value: "$(body.action)"
+    - name: repo_fullname
+      value: "$(body.repository.full_name)"
+    - name: pull_request_id
+      value: "$(body.pull_request.id)"
+    - name: branch
+      value: "$(body.pull_request.head.ref)"
+    - name: sha
+      value: "$(body.pull_request.head.sha)"

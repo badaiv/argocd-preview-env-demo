@@ -1,0 +1,114 @@
+# templates/pipeline-hello-world.yaml
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: pipeline-build-push-status
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+spec:
+  params:
+    - name: repo_fullname
+      type: string
+      description: The GitHub repository URL
+    - name: branch
+      type: string
+      description: The branch to checkout
+    - name: sha
+      type: string
+      description: The commit SHA for GitHub status updates
+  workspaces:
+    - name: buildworkspace
+    - name: docker-credentials
+  tasks:
+    - name: set-status-start
+      taskRef:
+        name: github-set-status
+      params:
+        - name: CONTEXT
+          value: "ci-tekton/build"
+        - name: REPO_FULL_NAME
+          value: "$(params.repo_fullname)"
+        - name: SHA
+          value: "$(params.sha)"
+        - name: DESCRIPTION
+          value: "Build has started"
+        - name: STATE
+          value: pending
+        - name: TARGET_URL
+          value: "{{ .Values.tektonDashboardUrl }}/#/namespaces/pipelines/pipelineruns/$(context.pipelineRun.name)"
+    - name: fetch-repository
+      taskRef:
+        name: git-clone
+      runAfter:
+        - set-status-start
+      workspaces:
+        - name: output
+          workspace: buildworkspace
+      params:
+        - name: url
+          value: "https://github.com/$(params.repo_fullname).git"
+        - name: deleteExisting
+          value: "true"
+        - name: revision
+          value: "$(params.branch)"
+    - name: build
+      taskRef:
+        name: kaniko
+      runAfter:
+        - fetch-repository
+      params:
+        - name: IMAGE
+          value: $(params.repo_fullname):$(tasks.fetch-repository.results.commit)
+        - name: CONTEXT
+          value: ./
+        - name: DOCKERFILE
+          value: $(workspaces.source.path)/Dockerfile
+      workspaces:
+        - name: source
+          workspace: buildworkspace
+        - name: dockerconfig
+          workspace: docker-credentials
+  finally:
+    - name: set-status-success
+      when:
+        - input: $(tasks.build.status)
+          operator: in
+          values: ["Succeeded"]
+      taskRef:
+        name: github-set-status
+      params:
+        - name: CONTEXT
+          value: "ci-tekton/build"
+        - name: REPO_FULL_NAME
+          value: "$(params.repo_fullname)"
+        - name: SHA
+          value: "$(params.sha)"
+        - name: DESCRIPTION
+          value: "Build has succeeded"
+        - name: STATE
+          value: success
+        - name: TARGET_URL
+          value: "{{ .Values.tektonDashboardUrl }}/#/namespaces/pipelines/pipelineruns/$(context.pipelineRun.name)"
+    - name: set-status-failure
+      when:
+        - input: $(tasks.build.status)
+          operator: in
+          values: ["Failed"]
+      taskRef:
+        name: github-set-status # Assuming this Task is installed separately or via another chart
+      params:
+        - name: CONTEXT
+          value: "ci-tekton/build"
+        - name: REPO_FULL_NAME
+          value: "$(params.repo_fullname)"
+        - name: SHA
+          value: "$(params.sha)"
+        - name: DESCRIPTION
+          value: "Build has failed"
+        - name: STATE
+          value: failure
+        - name: TARGET_URL
+          value: "{{ .Values.tektonDashboardUrl }}/#/namespaces/pipelines/pipelineruns/$(context.pipelineRun.name)"

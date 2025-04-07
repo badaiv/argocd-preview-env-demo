@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: docker-hello-world
+  namespace: argocd
+spec:
+  generators:
+    - pullRequest:
+        github:
+          owner: badaiv
+          repo: docker-hello-world # (1)
+          tokenRef:
+            key: token
+            secretName: github-token # (2)
+        requeueAfterSeconds: 15
+  template:
+    metadata:
+      name: 'docker-hello-world-{{branch}}-{{number}}'
+    spec:
+      project: default
+      destination:
+        namespace: 'env-preview-docker-hello-world-{{branch}}'
+        server: 'https://kubernetes.default.svc'
+      source:
+        # (3)
+        path: preview-env-helm/
+        repoURL: 'https://github.com/badaiv/argocd-preview-env-demo.git'
+        targetRevision: HEAD
+        helm:
+          parameters:
+            # (4)
+            - name: namespace
+              value: 'env-preview-docker-hello-world-{{branch}}'
+            # (5)
+            - name: version
+              value: '{{head_sha}}'
+            # (6)
+            - name: image
+              value: docker-hello-world
+            - name: name
+              value: docker-hello-world-preview
+      # (7)
+      syncPolicy:
+        automated:
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

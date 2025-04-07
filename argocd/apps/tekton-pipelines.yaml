@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tekton-pipelines
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: 'https://github.com/badaiv/argocd-preview-env-demo.git'
+    targetRevision: HEAD
+    path: ci-tekton/pipelines
+    directory:
+      recurse: true
+
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: ci-pipelines
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      # Automatically create the destination namespace if it doesn't exist
+      - CreateNamespace=true
+      # Apply resources even if they drift from the live state (recommended)
+      - ApplyOutOfSyncOnly=true
+      # Consider adding ServerSideApply=true for better compatibility with K8s features
+      # - ServerSideApply=true

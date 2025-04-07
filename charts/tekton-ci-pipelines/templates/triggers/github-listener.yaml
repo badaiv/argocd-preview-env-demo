@@ -1,0 +1,37 @@
+# templates/trigger-github-listener.yaml
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: github-listener
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+spec:
+  serviceAccountName: tekton-triggers-sa
+  triggers:
+    - name: github-listener
+      interceptors:
+        - ref:
+            name: "github"
+          params:
+            - name: secretRef
+              value:
+                secretName: github-webhook-secret
+                secretKey: secret
+            - name: "eventTypes"
+              value: ["pull_request"]
+            - name: "X-Hub-Signature-256"
+            - name: algorithm
+              value: sha256
+        - name: "only when PRs are opened"
+          ref:
+            name: "cel"
+          params:
+            - name: "filter"
+              value: "body.action in ['opened', 'synchronize', 'reopened']"
+      bindings:
+        - ref: github-binding
+      template:
+        ref: github-template

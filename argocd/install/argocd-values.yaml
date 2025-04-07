@@ -1,0 +1,49 @@
+# argocd-values.yaml
+# --- Argo CD Helm Chart Values ---
+# Keep empty to use chart defaults, or override specific values.
+
+# Example: Disable Dex if you manage authentication externally or don't need it yet
+# dex:
+#   enabled: false
+
+# Example: Configure Ingress (requires an Ingress controller)
+# server:
+#   ingress:
+#     enabled: true
+#     ingressClassName: "nginx" # Or your specific Ingress class
+#     hosts:
+#       - argocd.yourdomain.com
+#     # tls:
+#     #   - secretName: argocd-server-tls
+#     #     hosts:
+#     #       - argocd.yourdomain.com
+
+# Example: Set resource limits for key components
+# controller:
+#   resources:
+#     requests:
+#       cpu: 200m
+#       memory: 256Mi
+#     limits:
+#       cpu: 1000m
+#       memory: 512Mi
+# server:
+#   resources:
+#     requests:
+#       cpu: 100m
+#       memory: 128Mi
+#     limits:
+#       cpu: 500m
+#       memory: 256Mi
+# repoServer:
+#   resources:
+#     requests:
+#       cpu: 100m
+#       memory: 256Mi
+#     limits:
+#       cpu: 1000m
+#       memory: 512Mi
+
+# Note: For production, carefully review and configure resource limits,
+# persistence, HA settings, and security configurations.
+

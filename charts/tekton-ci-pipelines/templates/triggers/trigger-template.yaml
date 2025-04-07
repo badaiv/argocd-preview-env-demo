@@ -1,0 +1,48 @@
+# templates/trigger-template.yaml
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: github-template
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+spec:
+  params:
+    - name: action
+    - name: pull_request_id
+    - name: repo_fullname
+    - name: branch
+    - name: sha
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: {{ .Release.Name }}-pullrequest-pipeline-run-
+      spec:
+        pipelineRef:
+          name: pipeline-build-push-status
+        params:
+          - name: action
+            value: "$(tt.params.action)"
+          - name: pull_request_id
+            value: "$(tt.params.pull_request_id)"
+          - name: repo_fullname
+            value: "$(tt.params.repo_fullname)"
+          - name: branch
+            value: "$(tt.params.branch)"
+          - name: sha
+            value: "$(tt.params.sha)"
+        workspaces:
+          - name: docker-credentials
+            secret:
+              secretName: docker-credentials
+          - name: buildworkspace
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: {{ .Values.pipelineRunStorageSize }}

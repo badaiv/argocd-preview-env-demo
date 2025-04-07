@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-token
+stringData:
+  # TODO replace with your GitHub token
+  token: ghp_xxxxxxxxxxxxxxxxxx

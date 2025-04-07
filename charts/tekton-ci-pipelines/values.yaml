@@ -1,0 +1,13 @@
+# values.yaml
+# Default values for ci-tekton-resources chart.
+# Provide sensitive values via --set or a separate values file.
+
+# Secret values (replace defaults with secure injection methods)
+githubToken: ghp_xxxxxxxxxxxxxxxxxx
+githubWebhookSecret: "123456"
+dockerCredentialsConfigJson: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX= # base64 encoded config.json
+
+# Other potential values to parameterize
+namespace: ci-pipelines
+tektonDashboardUrl: http://localhost:9097
+pipelineRunStorageSize: 300Mi
