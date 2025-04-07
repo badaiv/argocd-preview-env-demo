@@ -23,7 +23,7 @@ spec:
         server: 'https://kubernetes.default.svc'
       source:
         # (3)
-        path: preview-env-helm/
+        path: charts/preview-env-helm/
         repoURL: 'https://github.com/badaiv/argocd-preview-env-demo.git'
         targetRevision: HEAD
         helm:
