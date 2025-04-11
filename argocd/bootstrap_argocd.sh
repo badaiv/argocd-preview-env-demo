@@ -14,10 +14,7 @@ ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
 # Define Argo CD Helm chart version to ensure reproducibility
 ARGOCD_CHART_VERSION="7.8.23"  # Find latest stable version for argo-cd chart
 
-# Helm repository information
 ARGOCD_HELM_REPO="https://argoproj.github.io/argo-helm"
-# --- End Configuration ---
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # --- Helper Functions ---
